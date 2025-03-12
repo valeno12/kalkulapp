@@ -23,7 +23,7 @@ func (s *SessionService) CreateSession(ctx context.Context, sessionName, userNam
 	params := db.CreateSessionParams{
 		Name:            sessionName,
 		Code:            code,
-		CreatedBy:       0, // Se llenará después con el user_id
+		CreatedBy:       0,
 		MaxParticipants: sqlNullInt32(maxParticipants),
 	}
 
