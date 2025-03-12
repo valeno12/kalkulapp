@@ -14,4 +14,5 @@ func RegisterRoutes(e *echo.Echo) {
 	sessionHandler := handlers.NewSessionHandler(sessionService)
 
 	e.POST("/sessions", sessionHandler.CreateSession)
+	e.POST("/sessions/:code/join", session.JoinSessionHandler(sessionService))	
 }

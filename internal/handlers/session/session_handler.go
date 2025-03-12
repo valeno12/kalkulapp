@@ -25,7 +25,7 @@ func (h *SessionHandler) CreateSession(c echo.Context) error {
 		return utils.ErrorResponse(c, "Datos inválidos")
 	}
 
-	sessionID, code, err := h.service.CreateSession(context.Background(), req.SessionName, req.UserName, req.MaxParticipants)
+	sessionID, code, err := h.service.CreateSession(context.Background(), req)
 	if err != nil {
 		logger.Log.Errorf("Error al crear sesión: %v", err)
 		return utils.ErrorResponse(c, "No se pudo crear la sesión")

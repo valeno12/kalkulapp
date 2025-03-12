@@ -10,3 +10,7 @@ type CreateSessionResponse struct {
 	SessionID int64  `json:"session_id"`
 	Code      string `json:"code"`
 }
+
+type JoinSessionRequest struct {
+	UserName string `json:"user_name" validate:"required"`
+}

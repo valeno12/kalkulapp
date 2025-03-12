@@ -17,14 +17,14 @@ func NewSessionService(q *db.Queries) *SessionService {
 	return &SessionService{queries: q}
 }
 
-func (s *SessionService) CreateSession(ctx context.Context, sessionName, userName string, maxParticipants *int) (int64, string, error) {
+func (s *SessionService) CreateSession(ctx context.Context, req CreateSessionRequest) (int64, string, error) {
 	code := generateSessionCode()
 
 	params := db.CreateSessionParams{
-		Name:            sessionName,
+		Name:            req.SessionName,
 		Code:            code,
 		CreatedBy:       0,
-		MaxParticipants: sqlNullInt32(maxParticipants),
+		MaxParticipants: sqlNullInt32(req.MaxParticipants),
 	}
 
 	result, err := s.queries.CreateSession(ctx, params)
@@ -37,10 +37,9 @@ func (s *SessionService) CreateSession(ctx context.Context, sessionName, userNam
 		return 0, "", err
 	}
 
-	// Insertar usuario creador
 	_, err = s.queries.CreateUser(ctx, db.CreateUserParams{
 		SessionID: sessionID,
-		Name:      userName,
+		Name:      req.UserName,
 	})
 	if err != nil {
 		return 0, "", err
@@ -48,6 +47,7 @@ func (s *SessionService) CreateSession(ctx context.Context, sessionName, userNam
 
 	return sessionID, code, nil
 }
+
 
 func sqlNullInt32(val *int) sql.NullInt32 {
 	if val == nil {
