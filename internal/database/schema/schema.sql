@@ -1,0 +1,48 @@
+CREATE TABLE sessions (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    code VARCHAR(10) NOT NULL UNIQUE,
+    created_by BIGINT NOT NULL,
+    max_participants INT DEFAULT NULL,
+    status ENUM('active', 'closed') NOT NULL DEFAULT 'active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE users (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    session_id BIGINT NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    FOREIGN KEY (session_id) REFERENCES sessions(id) ON DELETE CASCADE
+);
+
+CREATE TABLE expenses (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    session_id BIGINT NOT NULL,
+    paid_by BIGINT NOT NULL,
+    amount DECIMAL(10,2) NOT NULL,
+    description VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (session_id) REFERENCES sessions(id) ON DELETE CASCADE,
+    FOREIGN KEY (paid_by) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE expense_shares (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    expense_id BIGINT NOT NULL,
+    user_id BIGINT NOT NULL,
+    amount DECIMAL(10,2) NOT NULL,
+    FOREIGN KEY (expense_id) REFERENCES expenses(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE debts (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    session_id BIGINT NOT NULL,
+    from_user BIGINT NOT NULL,
+    to_user BIGINT NOT NULL,
+    amount DECIMAL(10,2) NOT NULL,
+    FOREIGN KEY (session_id) REFERENCES sessions(id) ON DELETE CASCADE,
+    FOREIGN KEY (from_user) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (to_user) REFERENCES users(id) ON DELETE CASCADE
+);
