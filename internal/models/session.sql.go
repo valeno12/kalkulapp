@@ -10,6 +10,17 @@ import (
 	"database/sql"
 )
 
+const countUsersInSession = `-- name: CountUsersInSession :one
+SELECT COUNT(*) FROM users WHERE session_id = ?
+`
+
+func (q *Queries) CountUsersInSession(ctx context.Context, sessionID int64) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countUsersInSession, sessionID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createSession = `-- name: CreateSession :execresult
 INSERT INTO sessions (name, code, created_by, max_participants, status) 
 VALUES (?, ?, ?, ?, 'active')
@@ -44,6 +55,15 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (sql.Res
 	return q.db.ExecContext(ctx, createUser, arg.SessionID, arg.Name)
 }
 
+const deleteUser = `-- name: DeleteUser :exec
+DELETE FROM users WHERE id = ?
+`
+
+func (q *Queries) DeleteUser(ctx context.Context, id int64) error {
+	_, err := q.db.ExecContext(ctx, deleteUser, id)
+	return err
+}
+
 const getSessionByCode = `-- name: GetSessionByCode :one
 SELECT id, name, code, created_by, max_participants, status 
 FROM sessions WHERE code = ? LIMIT 1
@@ -70,4 +90,58 @@ func (q *Queries) GetSessionByCode(ctx context.Context, code string) (GetSession
 		&i.Status,
 	)
 	return i, err
+}
+
+const getUserByID = `-- name: GetUserByID :one
+SELECT id, session_id, name FROM users WHERE id = ?
+`
+
+func (q *Queries) GetUserByID(ctx context.Context, id int64) (User, error) {
+	row := q.db.QueryRowContext(ctx, getUserByID, id)
+	var i User
+	err := row.Scan(&i.ID, &i.SessionID, &i.Name)
+	return i, err
+}
+
+const getUsersBySessionID = `-- name: GetUsersBySessionID :many
+SELECT id, session_id, name FROM users WHERE session_id = ?
+`
+
+func (q *Queries) GetUsersBySessionID(ctx context.Context, sessionID int64) ([]User, error) {
+	rows, err := q.db.QueryContext(ctx, getUsersBySessionID, sessionID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []User
+	for rows.Next() {
+		var i User
+		if err := rows.Scan(&i.ID, &i.SessionID, &i.Name); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const updateSessionCreatedBy = `-- name: UpdateSessionCreatedBy :exec
+UPDATE sessions
+SET created_by = ?
+WHERE id = ?
+`
+
+type UpdateSessionCreatedByParams struct {
+	CreatedBy int64
+	ID        int64
+}
+
+func (q *Queries) UpdateSessionCreatedBy(ctx context.Context, arg UpdateSessionCreatedByParams) error {
+	_, err := q.db.ExecContext(ctx, updateSessionCreatedBy, arg.CreatedBy, arg.ID)
+	return err
 }

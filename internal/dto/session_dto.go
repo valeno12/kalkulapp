@@ -14,3 +14,12 @@ type CreateSessionResponse struct {
 type JoinSessionRequest struct {
 	UserName string `json:"user_name" validate:"required"`
 }
+
+type Participant struct {
+	ID   int64  `json:"id"`
+	Name string `json:"name"`
+}
+
+type GetSessionParticipantsResponse struct {
+	Participants []Participant `json:"participants"`
+}
